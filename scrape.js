@@ -50,6 +50,10 @@ async function processDocs(docUrls, existingDocs) {
     if (!existingDocs.has(url)) {
       newDocuments.push(createDocument(url));
     }
+    if (newDocuments.length === 25) {
+        // DocumentCloud takes up to 25 documents at a time.
+        break;
+    }
   }
   const token = await getAuthToken();
 
