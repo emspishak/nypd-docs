@@ -97,6 +97,10 @@ async function uploadDocs(docs, accessToken) {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     }});
+  if (!response.ok) {
+    console.log(`error: ${response.text()}`)
+    return [];
+  }
   const data = await response.json();
   if (data.length !== docs.length) {
     console.log(`length mismatch - ${data.length} / ${docs.length}`);
