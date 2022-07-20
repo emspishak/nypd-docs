@@ -95,7 +95,7 @@ async function uploadDocs(docs, accessToken) {
       'Content-Type': 'application/json',
     }});
   if (!response.ok) {
-    console.log(`error: ${response.text()}`)
+    console.log(`error: ${await response.text()}`)
     return [];
   }
   const data = await response.json();
