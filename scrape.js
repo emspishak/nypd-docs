@@ -50,9 +50,6 @@ async function processDocs(docUrls, existingDocs) {
     if (!existingDocs.has(url)) {
       newDocuments.push(createDocument(url));
     }
-    if (newDocuments.length === 10) {
-      break;
-    }
   }
   const token = await getAuthToken();
 
