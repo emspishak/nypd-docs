@@ -3,6 +3,7 @@ const {promises: fs} = require('fs');
 const {parse: parseCsv} = require('csv-parse/sync');
 
 const EXISTING_DOCS_FILE = 'documents.json';
+const DOCS_PER_REQUEST = 25;
 
 /** Top-level function to upload new docs to DocumentCloud. */
 async function start() {
@@ -50,10 +51,6 @@ async function processDocs(docUrls, existingDocs) {
     if (!existingDocs.has(url)) {
       newDocuments.push(createDocument(url));
     }
-    if (newDocuments.length === 25) {
-      // DocumentCloud takes up to 25 documents at a time.
-      break;
-    }
   }
   const token = await getAuthToken();
 
@@ -94,31 +91,43 @@ async function getAuthToken() {
  * about the updated docs.
  */
 async function uploadDocs(docs, accessToken) {
-  const response = await fetch('https://api.www.documentcloud.org/api/documents/', {
-    method: 'POST',
-    body: JSON.stringify(docs),
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    }});
-  if (!response.ok) {
-    console.log(`error: ${await response.text()}`);
-    return [];
-  }
-  const data = await response.json();
-  if (data.length !== docs.length) {
-    console.log(`length mismatch - ${data.length} / ${docs.length}`);
-    console.log(`data: ${JSON.stringify(data, null, '\t')}`);
-    console.log(`docs: ${JSON.stringify(docs, null, '\t')}`);
-    return [];
-  }
-
   const addedDocs = [];
-  for (let i = 0; i < data.length; i++) {
-    addedDocs.push({
-      source_url: docs[i].file_url,
-      permanent_url: data[i].canonical_url,
-    });
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  for (let i = 0; i < Math.ceil(docs.length / DOCS_PER_REQUEST); i++) {
+    if (i !== 0) {
+      // DocumentCloud allows 10 requests per second, so wait 100ms between
+      // requests.
+      await delay(100);
+    }
+
+    const requestDocs =
+        docs.slice(i * DOCS_PER_REQUEST, (i + 1) * DOCS_PER_REQUEST);
+    const response =
+        await fetch('https://api.www.documentcloud.org/api/documents/', {
+          method: 'POST',
+          body: JSON.stringify(requestDocs),
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }});
+    if (!response.ok) {
+      console.log(`error: ${await response.text()}`);
+      return addedDocs;
+    }
+    const data = await response.json();
+    if (data.length !== requestDocs.length) {
+      console.log(`length mismatch - ${data.length} / ${requestDocs.length}`);
+      console.log(`data: ${JSON.stringify(data, null, '\t')}`);
+      console.log(`dequesetDcs: ${JSON.stringify(requestDocs, null, '\t')}`);
+      return addedDocs;
+    }
+
+    for (let i = 0; i < data.length; i++) {
+      addedDocs.push({
+        source_url: requestDocs[i].file_url,
+        permanent_url: data[i].canonical_url,
+      });
+    }
   }
   return addedDocs;
 }
