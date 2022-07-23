@@ -65,7 +65,10 @@ function createDocument(sourceUrl) {
   const urlParts = sourceUrl.split('/');
   return {
     access: 'public',
-    data: {'_tag': 'https://github.com/emspishak/nypd-docs'},
+    data: {'_tag': [
+      'https://github.com/emspishak/nypd-docs',
+      'NYPD',
+    ]},
     file_url: sourceUrl,
     source: sourceUrl,
     title: urlParts[urlParts.length - 1],
