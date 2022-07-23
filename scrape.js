@@ -50,6 +50,7 @@ async function processDocs(docUrls, existingDocs) {
   for (const url of docUrls) {
     if (!existingDocs.has(url)) {
       newDocuments.push(createDocument(url));
+      existingDocs.add(url);
     }
   }
   const token = await getAuthToken();
