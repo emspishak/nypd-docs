@@ -51,8 +51,8 @@ async function processDocs(docUrls, existingDocs) {
       newDocuments.push(createDocument(url));
     }
     if (newDocuments.length === 25) {
-        // DocumentCloud takes up to 25 documents at a time.
-        break;
+      // DocumentCloud takes up to 25 documents at a time.
+      break;
     }
   }
   const token = await getAuthToken();
@@ -99,7 +99,7 @@ async function uploadDocs(docs, accessToken) {
       'Content-Type': 'application/json',
     }});
   if (!response.ok) {
-    console.log(`error: ${await response.text()}`)
+    console.log(`error: ${await response.text()}`);
     return [];
   }
   const data = await response.json();
