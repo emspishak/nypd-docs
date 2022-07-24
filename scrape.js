@@ -11,6 +11,7 @@ async function start() {
   const existingDocsSet = getExistingDocsSet(existingDocs);
 
   const profileDocs = await getProfileDocs();
+  // const profileDocs = await getAllProfileDocs();
 
   const newDocs = await processDocs(profileDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
@@ -33,9 +34,39 @@ async function getProfileDocs() {
   const response = await fetch(
       'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv');
   const body = await response.text();
+  return getDocsFromCsv(body);
+}
 
+/**
+ * Search the full commit history to find any previous docs that are now
+ * removed.
+ */
+async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
+  const docs = new Set();
+  let apiUrl = 'https://api.github.com/repos/ryanwatkins/nypd-officer-profiles/commits?path=/documents.csv';
+  while (apiUrl) {
+    const response = await fetch(apiUrl);
+    const json = await response.json();
+    for (const commit of json) {
+      const hash = commit.sha;
+      const documentsResponse = await fetch(
+          `https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/${hash}/documents.csv`);
+      const body = await documentsResponse.text();
+      getDocsFromCsv(body).forEach(docs.add, docs);
+    }
+    const linkHeader = response.headers.get('link');
+
+    apiUrl = linkHeader.match(/<([^>]+)>; rel="next"/)?.[1];
+  }
+  // Remove a doc with a malformed URL.
+  docs.delete('https://oip.nypdonline.orghttps://oip-admin.nypdonline.org/files/Monjaras_10262021.pdf');
+  return Array.from(docs);
+}
+
+/** Takes a CSV string and returns an array of the document URLs. */
+function getDocsFromCsv(csvString) {
   // Trim off the headers in the first row.
-  const records = parseCsv(body).slice(1);
+  const records = parseCsv(csvString).slice(1);
 
   const docUrls = [];
   for (const doc of records) {
