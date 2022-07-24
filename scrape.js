@@ -12,6 +12,7 @@ async function start() {
 
   const profileDocs = await getProfileDocs();
   // const profileDocs = await getAllProfileDocs();
+  // const profileDocs = await getDocsFromFile('some_file.txt');
 
   const newDocs = await processDocs(profileDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
@@ -61,6 +62,12 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
   // Remove a doc with a malformed URL.
   docs.delete('https://oip.nypdonline.orghttps://oip-admin.nypdonline.org/files/Monjaras_10262021.pdf');
   return Array.from(docs);
+}
+
+/** Uploads all docs in a file (each URL on a new line). */
+async function getDocsFromFile(filename) { // eslint-disable-line no-unused-vars
+  const contents = await fs.readFile(filename);
+  return contents.toString().trim().split('\n');
 }
 
 /** Takes a CSV string and returns an array of the document URLs. */
