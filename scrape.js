@@ -101,7 +101,7 @@ async function getApuDocs() {
   return pdfs.get();
 }
 
-/** Uploads any new documents and returns the newly uplodaded documents. */
+/** Uploads any new documents and returns the newly uploaded documents. */
 async function processDocs(docUrls, existingDocs) {
   const newDocuments = [];
   for (const url of docUrls) {
