@@ -1,9 +1,11 @@
+const cheerio = require('cheerio');
 const fetch = require('node-fetch');
 const {promises: fs} = require('fs');
 const {parse: parseCsv} = require('csv-parse/sync');
 
 const EXISTING_DOCS_FILE = 'documents.json';
 const DOCS_PER_REQUEST = 25;
+const NYC_GOV = 'https://www1.nyc.gov';
 
 /** Top-level function to upload new docs to DocumentCloud. */
 async function start() {
@@ -14,7 +16,11 @@ async function start() {
   // const profileDocs = await getAllProfileDocs();
   // const profileDocs = await getDocsFromFile('some_file.txt');
 
-  const newDocs = await processDocs(profileDocs, existingDocsSet);
+  const apuDocs = await getApuDocs();
+
+  const allDocs = [].concat(profileDocs, apuDocs);
+
+  const newDocs = await processDocs(allDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
 
   writeUpdatedDocs(existingDocs);
@@ -80,6 +86,19 @@ function getDocsFromCsv(csvString) {
     docUrls.push(doc[2]);
   }
   return docUrls;
+}
+
+/** Returns URLs of all CCRB APU summary docs. */
+async function getApuDocs() {
+  const response = await fetch(
+      `${NYC_GOV}/site/ccrb/prosecution/apu-quarterly-reports.page`);
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  const pdfs = $('a')
+      .map((i, a) => $(a))
+      .filter((i, a) => a.attr('href').endsWith('.pdf'))
+      .map((i, a) => NYC_GOV + a.attr('href'));
+  return pdfs.get();
 }
 
 /** Uploads any new documents and returns the newly uplodaded documents. */
