@@ -18,7 +18,9 @@ async function start() {
 
   const apuDocs = await getApuDocs();
 
-  const allDocs = [].concat(profileDocs, apuDocs);
+  const departureLetters = await getDepartureLetters();
+
+  const allDocs = [].concat(profileDocs, apuDocs, departureLetters);
 
   const newDocs = await processDocs(allDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
@@ -37,11 +39,8 @@ function getExistingDocsSet(existingDocs) {
 }
 
 /** Get the URLs of the NYPD profile documents. */
-async function getProfileDocs() {
-  const response = await fetch(
-      'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv');
-  const body = await response.text();
-  return getDocsFromCsv(body);
+function getProfileDocs() {
+  return getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
 }
 
 /**
@@ -70,20 +69,31 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
   return Array.from(docs);
 }
 
+/** Get the URLs of NYPD Departure Letters (from the CCRB website). */
+function getDepartureLetters() {
+  return getDocsFromCsv('https://raw.githubusercontent.com/emspishak/ccrb-complaint-records/main/departure-letters.csv', 3);
+}
+
 /** Uploads all docs in a file (each URL on a new line). */
 async function getDocsFromFile(filename) { // eslint-disable-line no-unused-vars
   const contents = await fs.readFile(filename);
   return contents.toString().trim().split('\n');
 }
 
-/** Takes a CSV string and returns an array of the document URLs. */
-function getDocsFromCsv(csvString) {
+/**
+ * Takes a URL of a CSV and returns an array of the document URLs that are in
+ * the given column of the CSV.
+ */
+async function getDocsFromCsv(url, docColumn) {
+  const response = await fetch(url);
+  const body = await response.text();
+
   // Trim off the headers in the first row.
-  const records = parseCsv(csvString).slice(1);
+  const records = parseCsv(body).slice(1);
 
   const docUrls = [];
   for (const doc of records) {
-    docUrls.push(doc[2]);
+    docUrls.push(doc[docColumn]);
   }
   return docUrls;
 }
