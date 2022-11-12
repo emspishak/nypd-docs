@@ -20,7 +20,10 @@ async function start() {
 
   const departureLetters = await getDepartureLetters();
 
-  const allDocs = [].concat(profileDocs, apuDocs, departureLetters);
+  const trialDecisions = await getTrialDecisions();
+
+  const allDocs = [].concat(
+      profileDocs, apuDocs, departureLetters, trialDecisions);
 
   const newDocs = await processDocs(allDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
@@ -72,6 +75,17 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
 function getDepartureLetters() {
   return getDocsFromCsv('https://raw.githubusercontent.com/emspishak/ccrb-complaint-records/main/departure-letters.csv', 3);
+}
+
+/**
+ * Gets the URLs of NYPD Trial Decisions, which are scraped from
+ * https://nypdonline.org/link/1016
+ */
+async function getTrialDecisions() {
+  const response = await fetch(
+      'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/trial-decisions.json');
+  const json = await response.json();
+  return json.map((record) => record.url);
 }
 
 /** Uploads all docs in a file (each URL on a new line). */
