@@ -22,8 +22,15 @@ async function start() {
 
   const trialDecisions = await getTrialDecisions();
 
+  const ccrbClosingReports = await getCcrbClosingReports();
+
   const allDocs = [].concat(
-      profileDocs, apuDocs, departureLetters, trialDecisions);
+      profileDocs,
+      apuDocs,
+      departureLetters,
+      trialDecisions,
+      ccrbClosingReports,
+  );
 
   const newDocs = await processDocs(allDocs, existingDocsSet);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
@@ -86,6 +93,14 @@ async function getTrialDecisions() {
       'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/trial-decisions.json');
   const json = await response.json();
   return json.map((record) => record.url);
+}
+
+/** Gets the URLs of closing reports posted to the CCRB website. */
+async function getCcrbClosingReports() {
+  const filenames = await getDocsFromCsv(
+      'https://www.nyc.gov/assets/ccrb/csv/closing-reports/redacted-closing-reports.csv', 2);
+  return filenames.map(
+      (filename) => `https://www1.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
 }
 
 /** Uploads all docs in a file (each URL on a new line). */
