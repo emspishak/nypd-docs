@@ -9,6 +9,12 @@ const NYC_GOV = 'https://www1.nyc.gov';
 
 /** Top-level function to upload new docs to DocumentCloud. */
 async function start() {
+  const authToken = await getAuthToken();
+  const failedDocs = await checkDocuments(authToken);
+  if (failedDocs !== 0) {
+    process.exitCode(failedDocs);
+  }
+
   const existingDocs = await loadExistingDocs();
   const existingDocsSet = getExistingDocsSet(existingDocs);
 
@@ -32,10 +38,49 @@ async function start() {
       ccrbClosingReports,
   );
 
-  const newDocs = await processDocs(allDocs, existingDocsSet);
+  const newDocs = await processDocs(allDocs, existingDocsSet, authToken);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
 
   writeUpdatedDocs(existingDocs);
+}
+
+/**
+ * Check that already uploaded docs have successfully processed. This will exit
+ * with a non-zero exit code (after uploading all docs) to alert that there are
+ * some docs that need manual fixing.
+ */
+async function checkDocuments(authToken) {
+  let badDocCount = 0;
+
+  let url = 'https://api.www.documentcloud.org/api/documents/?format=json&user=106646&per_page=100';
+  while (url !== null) {
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      }});
+    if (!response.ok) {
+      console.log(`error: ${await response.text()}`);
+      return -1;
+    }
+
+    const data = await response.json();
+    for (const doc of data.results) {
+      if (doc.status !== 'success') {
+        badDocCount++;
+        console.log(
+            `::warning ::found unprocessed doc: ${JSON.stringify(doc)}`);
+      }
+    }
+
+    url = data.next;
+    if (url !== null) {
+      // DocumentCloud allows 10 requests per second, so wait 100ms between
+      // requests.
+      await delay(100);
+    }
+  }
+
+  return badDocCount;
 }
 
 /** Load documents that have already been uploaded. */
@@ -141,7 +186,7 @@ async function getApuDocs() {
 }
 
 /** Uploads any new documents and returns the newly uploaded documents. */
-async function processDocs(docUrls, existingDocs) {
+async function processDocs(docUrls, existingDocs, authToken) {
   const newDocuments = [];
   for (const url of docUrls) {
     if (!existingDocs.has(url)) {
@@ -149,9 +194,8 @@ async function processDocs(docUrls, existingDocs) {
       existingDocs.add(url);
     }
   }
-  const token = await getAuthToken();
 
-  return uploadDocs(newDocuments, token);
+  return uploadDocs(newDocuments, authToken);
 }
 
 /** Create a Document JSON object for the DocumentCloud API. */
@@ -183,13 +227,17 @@ async function getAuthToken() {
   return data.access;
 }
 
+/** Returns a promise that resolves after the given number of milliseconds. */
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Uploads the given docs (in DocumentCloud JSON format) and returns details
  * about the updated docs.
  */
 async function uploadDocs(docs, accessToken) {
   const addedDocs = [];
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   for (let i = 0; i < Math.ceil(docs.length / DOCS_PER_REQUEST); i++) {
     if (i !== 0) {
       // DocumentCloud allows 10 requests per second, so wait 100ms between
