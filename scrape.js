@@ -126,7 +126,7 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
 function getDepartureLetters() {
-  return getDocsFromCsv('https://raw.githubusercontent.com/emspishak/ccrb-complaint-records/main/departure-letters.csv', 3);
+  return getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
 }
 
 /**
