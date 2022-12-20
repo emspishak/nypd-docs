@@ -96,7 +96,6 @@ function getExistingDocsSet(existingDocs) {
 /** Get the URLs of the NYPD profile documents. */
 async function getProfileDocs() {
   const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
-  console.log(`found ${docs.length} profile docs`);
   checkDocCount('profile', 750, docs);
   return docs;
 }
@@ -130,7 +129,6 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
 async function getDepartureLetters() {
   const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
-  console.log(`found ${docs.length} departure letter docs`);
   checkDocCount('departure letter', 150, docs);
   return docs;
 }
@@ -144,7 +142,6 @@ async function getTrialDecisions() {
       'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/trial-decisions.json');
   const json = await response.json();
   const docs = json.map((record) => record.url);
-  console.log(`found ${docs.length} trial decision docs`);
   checkDocCount('trial decision', 1500, docs);
   return docs;
 }
@@ -155,7 +152,6 @@ async function getCcrbClosingReports() {
       'https://www.nyc.gov/assets/ccrb/csv/closing-reports/redacted-closing-reports.csv', 2);
   const docs = filenames.map(
       (filename) => `https://www1.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
-  console.log(`found ${docs.length} CCRB closing report docs`);
   checkDocCount('CCRB closing report', 1000, docs);
   return docs;
 }
@@ -195,7 +191,6 @@ async function getApuDocs() {
       .filter((i, a) => a.attr('href').endsWith('.pdf'))
       .map((i, a) => NYC_GOV + a.attr('href'));
   const docs = pdfs.get();
-  console.log(`found ${docs.length} APU docs`);
   checkDocCount('APU', 15, docs);
   return docs;
 }
@@ -206,6 +201,7 @@ async function getApuDocs() {
  * an issue.
  */
 function checkDocCount(docType, expected, docs) {
+  console.log(`found ${docs.length} ${docType} docs`);
   if (docs.length < expected) {
     console.log(
         `::warning ::expected at least ${expected} ${docType} docs, but got ` +
