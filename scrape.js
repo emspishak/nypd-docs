@@ -12,7 +12,7 @@ async function start() {
   const authToken = await getAuthToken();
   const failedDocs = await checkDocuments(authToken);
   if (failedDocs !== 0) {
-    process.exitCode(failedDocs);
+    process.exitCode = failedDocs;
   }
 
   const existingDocs = await loadExistingDocs();
@@ -94,8 +94,11 @@ function getExistingDocsSet(existingDocs) {
 }
 
 /** Get the URLs of the NYPD profile documents. */
-function getProfileDocs() {
-  return getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
+async function getProfileDocs() {
+  const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
+  console.log(`found ${docs.length} profile docs`);
+  checkDocCount('profile', 750, docs);
+  return docs;
 }
 
 /**
@@ -125,8 +128,11 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 }
 
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
-function getDepartureLetters() {
-  return getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
+async function getDepartureLetters() {
+  const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
+  console.log(`found ${docs.length} departure letter docs`);
+  checkDocCount('departure letter', 150, docs);
+  return docs;
 }
 
 /**
@@ -137,15 +143,21 @@ async function getTrialDecisions() {
   const response = await fetch(
       'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/trial-decisions.json');
   const json = await response.json();
-  return json.map((record) => record.url);
+  const docs = json.map((record) => record.url);
+  console.log(`found ${docs.length} trial decision docs`);
+  checkDocCount('trial decision', 1500, docs);
+  return docs;
 }
 
 /** Gets the URLs of closing reports posted to the CCRB website. */
 async function getCcrbClosingReports() {
   const filenames = await getDocsFromCsv(
       'https://www.nyc.gov/assets/ccrb/csv/closing-reports/redacted-closing-reports.csv', 2);
-  return filenames.map(
+  const docs = filenames.map(
       (filename) => `https://www1.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
+  console.log(`found ${docs.length} CCRB closing report docs`);
+  checkDocCount('CCRB closing report', 1000, docs);
+  return docs;
 }
 
 /** Uploads all docs in a file (each URL on a new line). */
@@ -182,7 +194,24 @@ async function getApuDocs() {
       .map((i, a) => $(a))
       .filter((i, a) => a.attr('href').endsWith('.pdf'))
       .map((i, a) => NYC_GOV + a.attr('href'));
-  return pdfs.get();
+  const docs = pdfs.get();
+  console.log(`found ${docs.length} APU docs`);
+  checkDocCount('APU', 15, docs);
+  return docs;
+}
+
+/**
+ * Check that we have roughly the right number of docs, as a proxy for if
+ * scraping is working. Log a warning and set a non-zero error code if there is
+ * an issue.
+ */
+function checkDocCount(docType, expected, docs) {
+  if (docs.length < expected) {
+    console.log(
+        `::warning ::expected at least ${expected} ${docType} docs, but got ` +
+            docs.length);
+    process.exitCode = 59;
+  }
 }
 
 /** Uploads any new documents and returns the newly uploaded documents. */
