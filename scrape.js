@@ -40,6 +40,7 @@ async function start() {
 
   const newDocs = await processDocs(allDocs, existingDocsSet, authToken);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
+  console.log(`uploaded ${newDocs.length} docs`);
 
   writeUpdatedDocs(existingDocs);
 }
