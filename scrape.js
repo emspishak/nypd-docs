@@ -12,7 +12,7 @@ async function start() {
   const authToken = await getAuthToken();
   const failedDocs = await checkDocuments(authToken);
   if (failedDocs !== 0) {
-    process.exitCode = failedDocs;
+    process.exitCode = 58;
   }
 
   const existingDocs = await loadExistingDocs();
@@ -60,7 +60,9 @@ async function checkDocuments(authToken) {
         'Authorization': `Bearer ${authToken}`,
       }});
     if (!response.ok) {
-      console.log(`error: ${await response.text()}`);
+      console.log(
+          `::warning ::error fetching ${url}: ${await response.text()}`);
+      process.exitCode = 62;
       return -1;
     }
 
@@ -282,14 +284,22 @@ async function uploadDocs(docs, accessToken) {
             'Content-Type': 'application/json',
           }});
     if (!response.ok) {
-      console.log(`error: ${await response.text()}`);
+      console.log(
+          `::warning ::error: ${await response.text()} ` +
+          `on ${JSON.stringify(requestDocs)}`);
+      process.exitCode = 60;
       return addedDocs;
     }
     const data = await response.json();
     if (data.length !== requestDocs.length) {
-      console.log(`length mismatch - ${data.length} / ${requestDocs.length}`);
-      console.log(`data: ${JSON.stringify(data, null, '\t')}`);
-      console.log(`dequesetDcs: ${JSON.stringify(requestDocs, null, '\t')}`);
+      console.log(
+          `::warning ::length mismatch - ` +
+          `${data.length} / ${requestDocs.length}`);
+      console.log(`::warning ::data: ${JSON.stringify(data, null, '\t')}`);
+      console.log(
+          `::warning ::dequesetDcs: ` +
+          `${JSON.stringify(requestDocs, null, '\t')}`);
+      process.exitCode = 61;
       return addedDocs;
     }
 
