@@ -7,12 +7,18 @@ const EXISTING_DOCS_FILE = 'documents.json';
 const DOCS_PER_REQUEST = 25;
 const NYC_GOV = 'https://www1.nyc.gov';
 
+/** Set to true to skip uploading to DocumentCloud. */
+const DRY_RUN = false;
+
 /** Top-level function to upload new docs to DocumentCloud. */
 async function start() {
-  const authToken = await getAuthToken();
-  const failedDocs = await checkDocuments(authToken);
-  if (failedDocs !== 0) {
-    process.exitCode = 58;
+  let authToken = null;
+  if (!DRY_RUN) {
+    authToken = await getAuthToken();
+    const failedDocs = await checkDocuments(authToken);
+    if (failedDocs !== 0) {
+      process.exitCode = 58;
+    }
   }
 
   const existingDocs = await loadExistingDocs();
@@ -275,38 +281,43 @@ async function uploadDocs(docs, accessToken) {
 
     const requestDocs =
         docs.slice(i * DOCS_PER_REQUEST, (i + 1) * DOCS_PER_REQUEST);
-    const response =
-        await fetch('https://api.www.documentcloud.org/api/documents/', {
-          method: 'POST',
-          body: JSON.stringify(requestDocs),
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          }});
-    if (!response.ok) {
-      console.log(
-          `::warning ::error: ${await response.text()} ` +
-          `on ${JSON.stringify(requestDocs)}`);
-      process.exitCode = 60;
-      return addedDocs;
-    }
-    const data = await response.json();
-    if (data.length !== requestDocs.length) {
-      console.log(
-          `::warning ::length mismatch - ` +
-          `${data.length} / ${requestDocs.length}`);
-      console.log(`::warning ::data: ${JSON.stringify(data, null, '\t')}`);
-      console.log(
-          `::warning ::dequesetDcs: ` +
-          `${JSON.stringify(requestDocs, null, '\t')}`);
-      process.exitCode = 61;
-      return addedDocs;
+    let data = null;
+    if (!DRY_RUN) {
+      const response =
+          await fetch('https://api.www.documentcloud.org/api/documents/', {
+            method: 'POST',
+            body: JSON.stringify(requestDocs),
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            }});
+      if (!response.ok) {
+        console.log(
+            `::warning ::error: ${await response.text()} ` +
+            `on ${JSON.stringify(requestDocs)}`);
+        process.exitCode = 60;
+        return addedDocs;
+      }
+      data = await response.json();
+      if (data.length !== requestDocs.length) {
+        console.log(
+            `::warning ::length mismatch - ` +
+            `${data.length} / ${requestDocs.length}`);
+        console.log(`::warning ::data: ${JSON.stringify(data, null, '\t')}`);
+        console.log(
+            `::warning ::dequesetDcs: ` +
+            `${JSON.stringify(requestDocs, null, '\t')}`);
+        process.exitCode = 61;
+        return addedDocs;
+      }
     }
 
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < requestDocs.length; i++) {
       addedDocs.push({
         source_url: requestDocs[i].file_url,
-        permanent_url: data[i].canonical_url,
+        permanent_url: data === null ?
+            'DRY_RUN_PLACEHOLDER' :
+            data[i].canonical_url,
       });
     }
   }
