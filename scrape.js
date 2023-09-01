@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
 const fetch = require('node-fetch');
+const pdftk = require('node-pdftk');
 const {promises: fs} = require('fs');
 const {parse: parseCsv} = require('csv-parse/sync');
 
@@ -30,6 +31,8 @@ async function start() {
 
   const apuDocs = await getApuDocs();
 
+  const apuLinkedDocs = await getApuLinkedDocs(apuDocs, existingDocsSet);
+
   const departureLetters = await getDepartureLetters();
 
   const trialDecisions = await getTrialDecisions();
@@ -39,6 +42,7 @@ async function start() {
   const allDocs = [].concat(
       profileDocs,
       apuDocs,
+      apuLinkedDocs,
       departureLetters,
       trialDecisions,
       ccrbClosingReports,
@@ -201,6 +205,37 @@ async function getApuDocs() {
       .map((i, a) => NYC_GOV + a.attr('href'));
   const docs = pdfs.get();
   checkDocCount('APU', 15, docs);
+  return docs;
+}
+
+/** Returns URLs from docs linked to in CCRB APU summary docs. */
+async function getApuLinkedDocs(apuDocs, existingDocs) {
+  const docs = [];
+
+  for (const apuDoc of apuDocs) {
+    // TODO: only run this over new APU docs, once we've scraped links from the
+    // existing ones.
+    // if (existingDocs.has(apuDoc)) {
+    //   continue;
+    // }
+
+    // Grab any PDFs linked from the APU reports.
+    const response = await fetch(apuDoc);
+    const apu = Buffer.from(await response.arrayBuffer());
+    // From https://stackoverflow.com/a/43810795
+    const out = await pdftk.input(apu).cat().uncompress().output();
+    const urls = out.toString().match(/https?:\/\/.+\.pdf/g);
+    if (urls !== null) {
+      const matches = new Set(
+          out.toString()
+              .match(/https?:\/\/.+\.pdf/g)
+              // Normalize URLs to www1 to avoid duplicates, as this is the format the rest of the CCRB web site uses.
+              .map(url => url.replace('https://www.nyc.gov/assets/ccrb/downloads/pdf/', 'https://www1.nyc.gov/assets/ccrb/downloads/pdf/')));
+      docs.push(...matches);
+    }
+  }
+
+  checkDocCount('APU linked', 0, docs);
   return docs;
 }
 
