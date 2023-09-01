@@ -10,7 +10,7 @@ jobs:
   scheduled:
     runs-on: ubuntu-latest
     steps:
-      - uses: awalsh128/cache-apt-pkgs-action@1.3.0
+      - uses: awalsh128/cache-apt-pkgs-action@v1.3.0
         with:
           packages: pdftk
           version: 1.0
