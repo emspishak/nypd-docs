@@ -49,7 +49,7 @@ async function start() {
       departureLetters,
       trialDecisions,
       ccrbClosingReports,
-  );
+  ).map((url) => url.replaceAll(' ', '%20'));
 
   const newDocs = await processDocs(allDocs, existingDocsSet, authToken);
   existingDocs.documents = existingDocs.documents.concat(newDocs);
