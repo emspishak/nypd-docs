@@ -33,6 +33,8 @@ async function start() {
 
   const apuLinkedDocs = await getApuLinkedDocs(apuDocs, existingDocsSet);
 
+  const ccrbAnnualReports = await getCCRBAnnualReports();
+
   const departureLetters = await getDepartureLetters();
 
   const trialDecisions = await getTrialDecisions();
@@ -43,6 +45,7 @@ async function start() {
       profileDocs,
       apuDocs,
       apuLinkedDocs,
+      ccrbAnnualReports,
       departureLetters,
       trialDecisions,
       ccrbClosingReports,
@@ -195,17 +198,21 @@ async function getDocsFromCsv(url, docColumn) {
 
 /** Returns URLs of all CCRB APU summary docs. */
 async function getApuDocs() {
-  const response = await fetch(
+  const docs = await getPdfsFromUrl(
       `${NYC_GOV}/site/ccrb/prosecution/apu-quarterly-reports.page`);
+  checkDocCount('APU', 15, docs);
+  return docs;
+}
+
+async function getPdfsFromUrl(url) {
+  const response = await fetch(url);
   const html = await response.text();
   const $ = cheerio.load(html);
   const pdfs = $('a')
       .map((i, a) => $(a))
       .filter((i, a) => a.attr('href').endsWith('.pdf'))
       .map((i, a) => NYC_GOV + a.attr('href'));
-  const docs = pdfs.get();
-  checkDocCount('APU', 15, docs);
-  return docs;
+  return pdfs.get();
 }
 
 /** Returns URLs from docs linked to in CCRB APU summary docs. */
@@ -236,6 +243,13 @@ async function getApuLinkedDocs(apuDocs, existingDocs) {
   }
 
   checkDocCount('APU linked', 0, docs);
+  return docs;
+}
+
+async function getCCRBAnnualReports() {
+  const docs = await getPdfsFromUrl(
+      `${NYC_GOV}/site/ccrb/policy/annual-bi-annual-reports.page`);
+  checkDocCount('CCRB annual reports', 50, docs);
   return docs;
 }
 
