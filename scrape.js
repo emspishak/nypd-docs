@@ -106,7 +106,9 @@ async function loadExistingDocs() {
 
 /** Get a Set of the source URLs of the already uploaded documents. */
 function getExistingDocsSet(existingDocs) {
-  return new Set(existingDocs.documents.map((e) => e.source_url));
+  const docsSet = new Set(existingDocs.documents.map((e) => e.source_url));
+  existingDocs.documents.flatMap((e) => e.alternate_urls).forEach((e) => docsSet.add(e));
+  return docsSet;
 }
 
 /** Get the URLs of the NYPD profile documents. */
