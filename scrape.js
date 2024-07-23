@@ -114,7 +114,7 @@ function getExistingDocsSet(existingDocs) {
 /** Get the URLs of the NYPD profile documents. */
 async function getProfileDocs() {
   const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
-  checkDocCount('profile', 750, docs);
+  checkDocCount('profile', 800, docs);
   return docs;
 }
 
@@ -147,7 +147,7 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
 async function getDepartureLetters() {
   const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
-  checkDocCount('departure letter', 150, docs);
+  checkDocCount('departure letter', 225, docs);
   return docs;
 }
 
@@ -160,7 +160,7 @@ async function getTrialDecisions() {
       'https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/trial-decisions.json');
   const json = await response.json();
   const docs = json.map((record) => record.url);
-  checkDocCount('trial decision', 1500, docs);
+  checkDocCount('trial decision', 1650, docs);
   return docs;
 }
 
@@ -170,7 +170,7 @@ async function getCcrbClosingReports() {
       'https://www.nyc.gov/assets/ccrb/csv/closing-reports/redacted-closing-reports.csv', 2);
   const docs = filenames.map(
       (filename) => `https://www1.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
-  checkDocCount('CCRB closing report', 1000, docs);
+  checkDocCount('CCRB closing report', 3150, docs);
   return docs;
 }
 
@@ -202,7 +202,7 @@ async function getDocsFromCsv(url, docColumn) {
 async function getApuDocs() {
   const docs = await getPdfsFromUrl(
       `${NYC_GOV}/site/ccrb/prosecution/apu-quarterly-reports.page`);
-  checkDocCount('APU', 15, docs);
+  checkDocCount('APU', 25, docs);
   return docs;
 }
 
