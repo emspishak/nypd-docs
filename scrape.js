@@ -289,7 +289,6 @@ function createDocument(sourceUrl) {
   return {
     access: 'public',
     data: {'_tag': [
-      'https://github.com/emspishak/nypd-docs',
       'NYPD',
     ]},
     file_url: sourceUrl,
