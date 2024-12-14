@@ -8,6 +8,21 @@ const EXISTING_DOCS_FILE = 'documents.json';
 const DOCS_PER_REQUEST = 25;
 const NYC_GOV = 'https://www1.nyc.gov';
 
+/**
+ * Documents that exist, but aren't linked to anywhere, which could come (for
+ * example) from of a mistake in CCRB's reports.
+ */
+const EXTRA_DOCS = [
+  // Page 4 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
+  // incorrecly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax938534-APU-Final-Documents.pdf
+  // where this link should be.
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax957907-APU-Final-Documents.pdf',
+  // Page 15 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
+  // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002669-Tax961613-APU-Final-Documents.pdf
+  // where this link should be.
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002792-Tax961613-APU-Final-Documents.pdf',
+];
+
 /** Set to true to skip uploading to DocumentCloud. */
 const DRY_RUN = false;
 
@@ -49,6 +64,7 @@ async function start() {
       departureLetters,
       trialDecisions,
       ccrbClosingReports,
+      EXTRA_DOCS,
   ).map((url) => url.replaceAll(' ', '%20'));
 
   const newDocs = await processDocs(allDocs, existingDocsSet, authToken);
