@@ -16,11 +16,11 @@ const EXTRA_DOCS = [
   // Page 4 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
   // incorrecly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax938534-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax957907-APU-Final-Documents.pdf',
+  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax957907-APU-Final-Documents.pdf',
   // Page 15 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
   // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002669-Tax961613-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002792-Tax961613-APU-Final-Documents.pdf',
+  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002792-Tax961613-APU-Final-Documents.pdf',
 ];
 
 /** Set to true to skip uploading to DocumentCloud. */
