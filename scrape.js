@@ -35,6 +35,12 @@ const EXTRA_DOCS = [
   'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304127-Tax963837-APU-Final-Documents.pdf',
 ];
 
+const DOCS_TO_SKIP = new Set([
+  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628%20-APU-Final-Documents.pdf',
+  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax967059-APU-Final-Documents.pdf',
+  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304127-Tax963837-APU-Final-Documents.pdf',
+]);
+
 /** Set to true to skip uploading to DocumentCloud. */
 const DRY_RUN = false;
 
@@ -302,7 +308,7 @@ function checkDocCount(docType, expected, docs) {
 async function processDocs(docUrls, existingDocs, authToken) {
   const newDocuments = [];
   for (const url of docUrls) {
-    if (!existingDocs.has(url)) {
+    if (!existingDocs.has(url) && !DOCS_TO_SKIP.has(url)) {
       newDocuments.push(createDocument(url));
       existingDocs.add(url);
     }
