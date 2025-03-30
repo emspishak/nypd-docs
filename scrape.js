@@ -147,7 +147,18 @@ function getExistingDocsSet(existingDocs) {
 
 /** Get the URLs of the NYPD profile documents. */
 async function getProfileDocs() {
-  const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/main/documents.csv', 2);
+  const docs = [];
+  for (const letter of [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']) {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/ryanwatkins/nypd-officer-profiles/refs/heads/main/nypd-profiles-${letter}.json`
+    );
+    const json = await response.json();
+    docs.push(
+      ...json.flatMap((officer) =>
+        officer.reports.documents.map((document) => document.url)
+      )
+    );
+  }
   checkDocCount('profile', 800, docs);
   return docs;
 }
