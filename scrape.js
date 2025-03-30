@@ -180,7 +180,9 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 
 /** Get the URLs of NYPD Departure Letters (from the CCRB website). */
 async function getDepartureLetters() {
-  const docs = await getDocsFromCsv('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/main/departureletters.csv', 6);
+  const response = await fetch('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/refs/heads/main/departureletters.json');
+  const json = await response.json();
+  const docs = json.departureLetters.map((obj) => obj.FileLink);
   checkDocCount('departure letter', 225, docs);
   return docs;
 }
