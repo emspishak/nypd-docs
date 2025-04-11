@@ -155,7 +155,7 @@ async function getProfileDocs() {
     const json = await response.json();
     docs.push(
       ...json.flatMap((officer) =>
-        officer.reports.documents.map((document) => document.url)
+        officer.reports.documents?.map((document) => document.url) ?? []
       )
     );
   }
