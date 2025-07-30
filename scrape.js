@@ -286,7 +286,9 @@ async function getApuLinkedDocs(apuDocs, existingDocs) {
           out.toString()
               .match(/https?:\/\/.+\.pdf/g)
               // Normalize URLs to www1 to avoid duplicates, as this is the format the rest of the CCRB web site uses.
-              .map(url => url.replace('https://www.nyc.gov/assets/ccrb/downloads/pdf/', 'https://www1.nyc.gov/assets/ccrb/downloads/pdf/')));
+              .map(url => url.replace('https://www.nyc.gov/assets/ccrb/downloads/pdf/', 'https://www1.nyc.gov/assets/ccrb/downloads/pdf/'))
+              .map(url => url.replace('\\(', '('))
+              .map(url => url.replace('\\)', ')')));
       docs.push(...matches);
     }
   }
