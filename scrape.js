@@ -258,7 +258,11 @@ async function getApuDocs() {
 }
 
 async function getPdfsFromUrl(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'UA'
+    }
+  });
   const html = await response.text();
   const $ = cheerio.load(html);
   const pdfs = $('a')
@@ -280,7 +284,11 @@ async function getApuLinkedDocs(apuDocs, existingDocs) {
     // }
 
     // Grab any PDFs linked from the APU reports.
-    const response = await fetch(apuDoc);
+    const response = await fetch(apuDoc, {
+      headers: {
+        'User-Agent': 'UA'
+      }
+    });
     const apu = Buffer.from(await response.arrayBuffer());
     // From https://stackoverflow.com/a/43810795
     const out = await pdftk.input(apu).cat().uncompress().output();
