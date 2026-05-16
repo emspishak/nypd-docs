@@ -232,7 +232,11 @@ async function getDocsFromFile(filename) { // eslint-disable-line no-unused-vars
  * the given column of the CSV.
  */
 async function getDocsFromCsv(url, docColumn) {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'UA'
+    }
+  });
   const body = await response.text();
 
   // Trim off the headers in the first row.
