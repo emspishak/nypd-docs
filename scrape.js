@@ -7,6 +7,7 @@ const {parse: parseCsv} = require('csv-parse/sync');
 const EXISTING_DOCS_FILE = 'documents.json';
 const DOCS_PER_REQUEST = 25;
 const NYC_GOV = 'https://www1.nyc.gov';
+const DOCUMENT_CLOUD_USER_AGENT = 'https://github.com/emspishak/nypd-docs';
 
 /**
  * Documents that exist, but aren't linked to anywhere, which could come (for
@@ -105,6 +106,7 @@ async function checkDocuments(authToken) {
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
+        'User-Agent': DOCUMENT_CLOUD_USER_AGENT,
       }});
     if (!response.ok) {
       console.log(
@@ -367,6 +369,9 @@ async function getAuthToken() {
   const response = await fetch('https://accounts.muckrock.com/api/token/', {
     body: params,
     method: 'POST',
+    headers: {
+      'User-Agent': DOCUMENT_CLOUD_USER_AGENT,
+    },
   });
   const data = await response.json();
   return data.access;
@@ -401,6 +406,7 @@ async function uploadDocs(docs, accessToken) {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
+              'User-Agent': DOCUMENT_CLOUD_USER_AGENT,
             }});
       if (!response.ok) {
         console.log(
