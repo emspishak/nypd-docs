@@ -6,7 +6,7 @@ const {parse: parseCsv} = require('csv-parse/sync');
 
 const EXISTING_DOCS_FILE = 'documents.json';
 const DOCS_PER_REQUEST = 25;
-const NYC_GOV = 'https://www1.nyc.gov';
+const NYC_GOV = 'https://www.nyc.gov';
 const DOCUMENT_CLOUD_USER_AGENT = 'https://github.com/emspishak/nypd-docs';
 
 /**
@@ -17,29 +17,29 @@ const EXTRA_DOCS = [
   // Page 4 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
   // incorrecly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax938534-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax957907-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/201910097-Tax957907-APU-Final-Documents.pdf',
   // Page 15 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q3.pdf
   // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002669-Tax961613-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002792-Tax961613-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202002792-Tax961613-APU-Final-Documents.pdf',
   // Page 22 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q4.pdf
   // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628%20-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628-APU-Final-Documents.pdf',
   // Page 20 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q4.pdf
   // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax963837-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax967059-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax967059-APU-Final-Documents.pdf',
   // Page 20 of https://www.nyc.gov/assets/ccrb/downloads/pdf/prosecution_pdf/apu_quarterly_reports/APUReport2024Q4.pdf
   // incorrectly links to https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/2202304127-Tax963837-APU-Final-Documents.pdf
   // where this link should be.
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304127-Tax963837-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304127-Tax963837-APU-Final-Documents.pdf',
 ];
 
 const DOCS_TO_SKIP = new Set([
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628%20-APU-Final-Documents.pdf',
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax963837-APU-Final-Documents.pdf',
-  'https://www1.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/2202304127-Tax963837-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202306511-Tax968628%20-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/202304412-Tax963837-APU-Final-Documents.pdf',
+  'https://www.nyc.gov/assets/ccrb/downloads/pdf/APU-Documents/2202304127-Tax963837-APU-Final-Documents.pdf',
 ]);
 
 /** Set to true to skip uploading to DocumentCloud. */
@@ -195,7 +195,8 @@ async function getAllProfileDocs() { // eslint-disable-line no-unused-vars
 async function getDepartureLetters() {
   const response = await fetch('https://raw.githubusercontent.com/ryanwatkins/ccrb-complaint-records/refs/heads/main/departureletters.json');
   const json = await response.json();
-  const docs = json.departureLetters.map((obj) => obj.FileLink);
+  const docs = json.departureLetters.map(
+      (obj) => obj.FileLink.replace('https://www1.nyc.gov/assets/ccrb/downloads/pdf/', 'https://www.nyc.gov/assets/ccrb/downloads/pdf/'));
   checkDocCount('departure letter', 225, docs);
   return docs;
 }
@@ -218,7 +219,7 @@ async function getCcrbClosingReports() {
   const filenames = await getDocsFromCsv(
       'https://www.nyc.gov/assets/ccrb/csv/closing-reports/redacted-closing-reports.csv', 2);
   const docs = filenames.map(
-      (filename) => `https://www1.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
+      (filename) => `https://www.nyc.gov/assets/ccrb/downloads/pdf/closing-reports/${filename}`);
   checkDocCount('CCRB closing report', 3150, docs);
   return docs;
 }
@@ -299,8 +300,6 @@ async function getApuLinkedDocs(apuDocs, existingDocs) {
       const matches = new Set(
           out.toString()
               .match(/https?:\/\/.+\.pdf/g)
-              // Normalize URLs to www1 to avoid duplicates, as this is the format the rest of the CCRB web site uses.
-              .map(url => url.replace('https://www.nyc.gov/assets/ccrb/downloads/pdf/', 'https://www1.nyc.gov/assets/ccrb/downloads/pdf/'))
               .map(url => url.replace('\\(', '('))
               .map(url => url.replace('\\)', ')')));
       docs.push(...matches);
